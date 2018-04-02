@@ -52,7 +52,7 @@ public class Db {
     }
 
     public void deleteFile(UUID id) {
-        PreparedStatement ps = session.prepare("SELECT data FROM " + getTableKeyspace() + " WHERE id=?");
+        PreparedStatement ps = session.prepare("delete from " + getTableKeyspace() + " WHERE id=?");
         BoundStatement boundStatement = new BoundStatement(ps);
         session.execute(boundStatement.bind(id));
     }
