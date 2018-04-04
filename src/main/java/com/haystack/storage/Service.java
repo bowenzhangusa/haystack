@@ -1,5 +1,7 @@
 package com.haystack.storage;
 
+import com.haystack.Config;
+
 import java.util.UUID;
 
 /**
@@ -8,6 +10,16 @@ import java.util.UUID;
 public class Service {
     protected Cache cache;
     protected Db db;
+    private static Service singleton;
+
+    public static Service getService() {
+        if (singleton != null) {
+            return singleton;
+        }
+
+        singleton = new Service(new Cache(Config.REDIS_HOST, Config.REDIS_PORT), new Db());
+        return singleton;
+    }
 
     public Service(Cache cache, Db db) {
         this.cache = cache;
