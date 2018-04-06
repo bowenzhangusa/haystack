@@ -2,6 +2,8 @@ package com.haystack.storage;
 
 import com.haystack.Config;
 
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.XMLConfiguration;
 import java.util.UUID;
 
 /**
@@ -15,6 +17,18 @@ public class Service {
     public static Service getService() {
         if (singleton != null) {
             return singleton;
+        }
+
+        String home = System.getenv("HAYSTACK_HOME");
+        try {
+            XMLConfiguration configRead = new XMLConfiguration(home + "/config.xml");
+            Config.REDIS_HOST = configRead.getString("redis_host", "localhost");
+            Config.REDIS_PORT = configRead.getInt("redis_port", 6379);
+            Config.CASSANDRA_HOST = configRead.getString("cassandra_host", "localhost");
+            Config.CASSANDRA_PORT = configRead.getInt("cassandra_port", 9042);
+        }
+        catch (ConfigurationException ex) {
+            // Using default configuration
         }
 
         singleton = new Service(new Cache(Config.REDIS_HOST, Config.REDIS_PORT), new Db());

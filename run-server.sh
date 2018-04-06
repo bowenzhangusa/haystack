@@ -14,7 +14,7 @@ if [[ -z "$PORT" ]] || [[ $# -ne 0 ]]; then
   exit 1
 fi
 
-
+export HAYSTACK_HOME="`pwd`"
 echo "[INFO] Running: com.haystack.server.HaystackServer on port number $PORT)"
 echo "start listening:...."
 exec mvn -q -nsu compile exec:exec -Dcheckstyle.skip=true  -DmainClass="com.haystack.server.HaystackServer" -Dport="$PORT"
