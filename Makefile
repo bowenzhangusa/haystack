@@ -36,14 +36,14 @@ redis-start:
 	@sleep 1
 	@echo starting master on current host
 	@./redis/src/redis-server --protected-mode no --port $(REDIS_MASTER_PORT) \
-	--cluster-enabled yes --cluster-config-file ./redis/nodes-master.conf \
+	--cluster-enabled yes \
 	--dbfilename dump-master-$(CURRENT_HOSTNAME).rdb \
 	--cluster-config-file nodes-master-$(CURRENT_HOSTNAME).conf \
 	--cluster-node-timeout 15000 >/dev/null &
 	@echo Redis master started at $(CURRENT_HOST):$(REDIS_MASTER_PORT)
 	@echo starting slave on current host
 	@./redis/src/redis-server --protected-mode no --port $(REDIS_SLAVE_PORT) \
-	--cluster-enabled yes --cluster-config-file ./redis/nodes-slave.conf \
+	--cluster-enabled yes \
 	--dbfilename dump-slave-$(CURRENT_HOSTNAME).rdb \
 	--cluster-config-file nodes-slave-$(CURRENT_HOSTNAME).conf \
 	--cluster-node-timeout 15000 >/dev/null &
@@ -69,8 +69,8 @@ redis-reset:
 	$(REDIS_CLI_MASTER) cluster reset hard
 	$(REDIS_CLI_SLAVE) FLUSHALL
 	$(REDIS_CLI_SLAVE) cluster reset hard
-	@rm redis/nodes-slave-$(CURRENT_HOSTNAME).conf &> /dev/null; true
-	@rm redis/nodes-master-$(CURRENT_HOSTNAME).conf &> /dev/null; true
+	@rm nodes-slave-$(CURRENT_HOSTNAME).conf &> /dev/null; true
+	@rm nodes-master-$(CURRENT_HOSTNAME).conf &> /dev/null; true
 
 # shows nodes in redis cluster
 redis-cluster-show-nodes:
