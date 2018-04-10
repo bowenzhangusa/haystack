@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <configuration>
-    <redis_host>localhost</redis_host>
-    <redis_port>6379</redis_port>
+    <redis_hosts>
+        128.2.13.137:7790,128.2.13.138:7790,128.2.13.144:7790
+    </redis_hosts>
     <cassandra_host>localhost</cassandra_host>
     <cassandra_port>9042</cassandra_port>
 </configuration>

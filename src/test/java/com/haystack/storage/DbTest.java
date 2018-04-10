@@ -1,7 +1,6 @@
 package com.haystack.storage;
 
 import com.datastax.driver.core.ResultSet;
-import com.haystack.Config;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,13 +20,12 @@ public class DbTest {
 
     @Before
     public void connect() {
-        this.db = new Db();
-        this.db.connect(Config.CASSANDRA_HOST, Config.CASSANDRA_PORT);
+        this.db = Service.getService().getDb();
     }
 
     @Test
     public void checkKeyspaceCreation() {
-        this.db.createKeyspace();
+        this.db.ensureKeyspaceExists();
 
         ResultSet result =
                 this.db.getSession().execute("SELECT * FROM system_schema.keyspaces;");
@@ -44,7 +42,7 @@ public class DbTest {
 
     @Test
     public void checkTableCreation() {
-        this.db.createTable();
+        this.db.ensureTableExists();
 
         ResultSet result = this.db.getSession().execute("SELECT * FROM storage.files;");
 

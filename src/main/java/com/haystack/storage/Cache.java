@@ -1,25 +1,33 @@
 package com.haystack.storage;
 
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.JedisCluster;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
  * This is a file cache using Redis
  */
 public class Cache {
-    protected JedisPool pool;
+    protected JedisCluster cluster;
 
-    public Cache(String host, int port) {
-        this.pool = new JedisPool(new JedisPoolConfig(), host, port);
+    public Cache(String[] hosts) {
+        Set<HostAndPort> connectionPoints = new HashSet<HostAndPort>();
+
+        for (String host: hosts) {
+            connectionPoints.add(HostAndPort.parseString(host));
+        }
+
+        this.cluster = new JedisCluster(connectionPoints);
     }
 
     public byte[] getFile(UUID uuid) {
-        return this.pool.getResource().get(uuid.toString().getBytes());
+        return this.cluster.get(uuid.toString().getBytes());
     }
 
     public void saveFile(UUID uuid, byte[] data) {
-        this.pool.getResource().set(uuid.toString().getBytes(), data);
+        this.cluster.set(uuid.toString().getBytes(), data);
     }
 }

@@ -16,7 +16,7 @@ import static org.junit.Assert.*;
 public class CacheTest {
     @Test
     public void canGetAndSet() {
-        Cache c = new Cache(Config.REDIS_HOST, Config.REDIS_PORT);
+        Cache c = Service.getService().getCache();
         UUID nonExistingId = UUID.randomUUID();
         assertNull(c.getFile(nonExistingId));
 

@@ -62,7 +62,7 @@ public class Db {
         cluster.close();
     }
 
-    public void createKeyspace() {
+    public void ensureKeyspaceExists() {
         StringBuilder sb =
                 new StringBuilder("CREATE KEYSPACE IF NOT EXISTS ")
                         .append(FILES_KEYSPACE).append(" WITH replication = {")
@@ -74,7 +74,7 @@ public class Db {
         session.execute(query);
     }
 
-    public void createTable() {
+    public void ensureTableExists() {
         StringBuilder sb = new StringBuilder("CREATE TABLE IF NOT EXISTS ")
                 .append(getTableKeyspace()).append("(")
                 .append("id uuid PRIMARY KEY, ")

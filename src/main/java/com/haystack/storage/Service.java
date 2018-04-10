@@ -4,6 +4,7 @@ import com.haystack.Config;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
+
 import java.util.UUID;
 
 /**
@@ -22,17 +23,26 @@ public class Service {
         String home = System.getenv("HAYSTACK_HOME");
         try {
             XMLConfiguration configRead = new XMLConfiguration(home + "/config.xml");
-            Config.REDIS_HOST = configRead.getString("redis_host", "localhost");
-            Config.REDIS_PORT = configRead.getInt("redis_port", 6379);
+            Config.REDIS_HOSTS = configRead.getStringArray("redis_hosts");
             Config.CASSANDRA_HOST = configRead.getString("cassandra_host", "localhost");
             Config.CASSANDRA_PORT = configRead.getInt("cassandra_port", 9042);
-        }
-        catch (ConfigurationException ex) {
-            // Using default configuration
+        } catch (ConfigurationException ex) {
+            ex.printStackTrace();
+            // TODO: should we ignore this?
         }
 
-        singleton = new Service(new Cache(Config.REDIS_HOST, Config.REDIS_PORT), new Db());
+        Db db = new Db();
+        db.connect(Config.CASSANDRA_HOST, Config.CASSANDRA_PORT);
+        singleton = new Service(new Cache(Config.REDIS_HOSTS), db);
         return singleton;
+    }
+
+    public Cache getCache() {
+        return cache;
+    }
+
+    public Db getDb() {
+        return db;
     }
 
     public Service(Cache cache, Db db) {
