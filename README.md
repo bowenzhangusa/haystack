@@ -1,12 +1,12 @@
 ## Infrastructure preparation
 All of the below is already done on andrew machines at `/afs/andrew.cmu.edu/usr2/asergeye/haystack/project`.
-Only run the following if you're installing it someplace else.
+Only follow the instructions below if you're installing it someplace else.
 
 The infrastructure setup is only semi-automated and does not handle errors and edge cases well.
 
 The application uses ports in range of 7790-7799. If they are busy or need to be changed, refer to the comments in Makefile.
 We used 3 andrew machines for deployment: unix4, unix5, and unix7.
-If the you use different machines, edit the Makefile with corresponding hostnames.
+If you use different machines, edit the Makefile with corresponding hostnames.
 
 ### Redis
 Redis cluster setup is based on this [tutorial](https://linode.com/docs/applications/big-data/how-to-install-and-configure-a-redis-cluster-on-ubuntu-1604/).
