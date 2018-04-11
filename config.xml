@@ -3,6 +3,8 @@
     <redis_hosts>
         128.2.13.137:7790,128.2.13.138:7790,128.2.13.144:7790
     </redis_hosts>
-    <cassandra_host>localhost</cassandra_host>
-    <cassandra_port>9042</cassandra_port>
+    <cassandra_hosts>
+        128.2.13.137,128.2.13.138,128.2.13.144
+    </cassandra_hosts>
+    <cassandra_port>7794</cassandra_port>
 </configuration>

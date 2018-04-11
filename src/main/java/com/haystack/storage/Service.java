@@ -24,7 +24,7 @@ public class Service {
         try {
             XMLConfiguration configRead = new XMLConfiguration(home + "/config.xml");
             Config.REDIS_HOSTS = configRead.getStringArray("redis_hosts");
-            Config.CASSANDRA_HOST = configRead.getString("cassandra_host", "localhost");
+            Config.CASSANDRA_HOSTS = configRead.getStringArray("cassandra_hosts");
             Config.CASSANDRA_PORT = configRead.getInt("cassandra_port", 9042);
         } catch (ConfigurationException ex) {
             ex.printStackTrace();
@@ -32,7 +32,7 @@ public class Service {
         }
 
         Db db = new Db();
-        db.connect(Config.CASSANDRA_HOST, Config.CASSANDRA_PORT);
+        db.connect(Config.CASSANDRA_HOSTS, Config.CASSANDRA_PORT);
         singleton = new Service(new Cache(Config.REDIS_HOSTS), db);
         return singleton;
     }

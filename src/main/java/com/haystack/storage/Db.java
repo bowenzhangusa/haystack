@@ -11,15 +11,17 @@ import java.util.UUID;
 public class Db {
     private Cluster cluster;
     private Session session;
+    private int nodeCount;
 
     public static final String FILES_TABLE = "files";
     public static final String FILES_KEYSPACE = "storage";
 
-    public void connect(String node, Integer port) {
-        Cluster.Builder b = Cluster.builder().addContactPoint(node);
+    public void connect(String[] hosts, int port) {
+        Cluster.Builder b = Cluster.builder().addContactPoints(hosts);
         b.withPort(port);
         cluster = b.build();
 
+        this.nodeCount = hosts.length;
         session = cluster.connect();
     }
 
@@ -67,7 +69,7 @@ public class Db {
                 new StringBuilder("CREATE KEYSPACE IF NOT EXISTS ")
                         .append(FILES_KEYSPACE).append(" WITH replication = {")
                         .append("'class':'").append("SimpleStrategy")
-                        .append("','replication_factor':").append(1)
+                        .append("','replication_factor':").append(this.nodeCount)
                         .append("};");
 
         String query = sb.toString();
