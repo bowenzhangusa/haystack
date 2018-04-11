@@ -21,7 +21,9 @@ make all
 ```
 
 Install redis gem for ruby so we can setup redis-cluster with `redis-trib`:
-`gem install redis`
+```
+gem install redis
+```
 
 On andrew machines, ruby version is too old, so [RVM](https://rvm.io/) can be installed to run the newest ruby:
 ```
@@ -30,9 +32,16 @@ rvm install 2.5
 gem install redis
 ```
 
-Then on each machine, run ```make redis-start``` (see Makefile for detailed info).
-Then on one of those machines, run `make redis-cluster-configure`.
-Then run `make redis-cluster-show-nodes` on the same machine to make sure there are 3 connected master nodes and 2 slaves. If the output is not as expected, check if ports are busy or some other error happened.
+Then on each machine, run 
+```
+make redis-start
+``` 
+(see Makefile for detailed info).
+Then on one of those machines, run 
+```
+make redis-cluster-configure
+```
+To make sure it works, you can run `make redis-cluster-show-nodes` on the same machine, expecting to see 3 connected master nodes and 2 slaves. If the output is not as expected, check if ports are busy or some other error happened.
 
 If you need to reconfigure the cluster later, make sure to first execute `make redis-reset` on each node, and then run `make redis-cluster-configure` on one of them.
 After setting the cluster up, modify `./config.xml` to point to all of the redis servers.
@@ -47,7 +56,7 @@ mv apache-cassandra-3.11.2 cassandra
 
 Run this on each node simultaneously (so that nodes could start communicating with each other ASAP, otherwise cassandra will complain and die):
 ```
-make cassandra start
+make cassandra-start
 ```
 
 
