@@ -62,6 +62,17 @@ make cassandra-start
 
 ### NGINX
 TODO
+
+### Maven
+
+To build and run the java app on andrew machines, a newer version of maven needs to be installed in project directory:
+```
+wget http://apache.claz.org/maven/maven-3/3.5.3/binaries/apache-maven-3.5.3-bin.tar.gz
+tar zxvf apache-maven-3.5.3-bin.tar.gz
+mv apache-maven-3.5.3 maven
+```
+
+If you already have newer maven installed globally, change the path to its binary in Makefile.
  
 ## Project installation instructions
 Java 8, maven, redis and cassandra need to be installed beforehand.
@@ -72,8 +83,6 @@ Then run
 
 ## Tests:
 `make test`
-
-Tests do not work on andrew machines (yet) due to incompatible maven version.
 
 ## Daily reboots on andrew machines
 

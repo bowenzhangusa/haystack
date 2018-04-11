@@ -13,6 +13,12 @@ HOST_2 ?= 128.2.13.137
 # unix7.andrew.cmu.edu
 HOST_3 ?= 128.2.13.138
 
+# a port where java app will accept http requests
+APP_PORT ?= 7799
+
+# change this to "mvn" if you have maven installed globally
+MAVEN = ./maven/bin/mvn
+
 # ports to use for redis
 # replace these ports if they are already taken;
 # then run "make redis-start" on each node, "make redis-cluster-configure" on one node,
@@ -52,10 +58,16 @@ export CASSANDRA_CONF ?= $(CASSANDRA_CONFIG_DIR)
 
 # runs tests
 test:
-	mvn -Dcheckstyle.skip=true test
+	$(MAVEN) -Dcheckstyle.skip=true test
 
 # starts redis, cassandra (+TODO: java app) on current host
-start: redis-start cassandra-start
+start: redis-start cassandra-start app-start
+
+# starts java application server
+app-start:
+	@$(MAVEN) -q -nsu compile exec:exec -Dcheckstyle.skip=true \
+	-DmainClass="com.haystack.server.HaystackServer" -Dport="$(APP_PORT)" &>/dev/null &
+	@echo Haystack app server started at $(APP_PORT)
 
 # starts redis instances on current host (must be repeated on all hosts)
 redis-start:

@@ -20,16 +20,7 @@ public class Service {
             return singleton;
         }
 
-        String home = System.getenv("HAYSTACK_HOME");
-        try {
-            XMLConfiguration configRead = new XMLConfiguration(home + "/config.xml");
-            Config.REDIS_HOSTS = configRead.getStringArray("redis_hosts");
-            Config.CASSANDRA_HOSTS = configRead.getStringArray("cassandra_hosts");
-            Config.CASSANDRA_PORT = configRead.getInt("cassandra_port", 9042);
-        } catch (ConfigurationException ex) {
-            ex.printStackTrace();
-            // TODO: should we ignore this?
-        }
+        Config.initialize();
 
         Db db = new Db();
         db.connect(Config.CASSANDRA_HOSTS, Config.CASSANDRA_PORT);

@@ -19,6 +19,8 @@ package com.haystack.server;
 import java.net.InetSocketAddress;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.haystack.Config;
+import com.haystack.storage.Service;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -47,6 +49,10 @@ public class HaystackServer implements Runnable {
       port = Integer.parseInt(args[0]);
     }
 
+    Service s = Service.getService();
+    s.getDb().ensureKeyspaceExists();
+    s.getDb().ensureTableExists();
+
     final HaystackServer server = new HaystackServer(port);
     try {
       server.start();
@@ -54,6 +60,7 @@ public class HaystackServer implements Runnable {
       server.shutDown();
     }
   }
+
   private void start() throws InterruptedException {
 
     // Configure the server.
