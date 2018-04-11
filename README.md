@@ -5,7 +5,7 @@ Only run the following if you're installing it someplace else.
 The infrastructure setup is only semi-automated and does not handle errors and edge cases well.
 
 The application uses ports in range of 7790-7799. If they are busy or need to be changed, refer to the comments in Makefile.
-We used 3 andrew machines for deployment: unix4, unix5, and unix7).
+We used 3 andrew machines for deployment: unix4, unix5, and unix7.
 If the you use different machines, edit the Makefile with corresponding hostnames.
 
 ### Redis
@@ -71,9 +71,7 @@ Tests do not work on andrew machines (yet) due to incompatible maven version.
 
 To make sure all the software runs after server reboots, ssh to every machine (in our case, unix5.andrew.cmu.edu, unix4.andrew.cmu.edu, unix7.andrew.cmu.edu) and run the following:
 
-`make redis-start`
-
-TODO: make the same for cassandra and nginx
+`make start`
 
 ## Project structure
 * `src` - java app source
