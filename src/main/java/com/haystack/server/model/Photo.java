@@ -1,6 +1,7 @@
 package com.haystack.server.model;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -10,20 +11,20 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 
 public class Photo {
-  private String id;
+  private UUID id;
   private byte[] image;
 
-  public Photo(String id, byte[] image) {
+  public Photo(UUID id, byte[] image) {
     this.id = id;
     this.image = image;
   }
 
   @JsonSerialize(using=ToStringSerializer.class)
-  public String getId() {
+  public UUID getId() {
     return id;
   }
 
-  public void setId(String id) {
+  public void setId(UUID id) {
     this.id = id;
   }
 

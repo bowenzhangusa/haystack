@@ -79,10 +79,21 @@ Java 8, maven, redis and cassandra need to be installed beforehand.
 Specify redis and cassandra connection options "config.xml".
 
 Then run
-`run-server.sh $port_number`
+```
+make start
+```
+
+If redis, cassandra, maven were configured as described above, this single command should start every component.
+The application should become available at port 7799 by default.
+If application logs are needed, run
+```
+DEBUG=1 make start
+```
 
 ## Tests:
-`make test`
+```
+make test
+```
 
 ## Daily reboots on andrew machines
 
@@ -94,3 +105,17 @@ To make sure all the software runs after server reboots, ssh to every machine (i
 * `src` - java app source
 * `setup` - directory with custom configuration files, used in Makefile for customizing the setup of cassandra
 * `cassandra`, `redis` - these are expected to contain corresponding software. It is not bundled with the project (see the previous readme sections on how these directories are created)
+
+## API usage
+
+Get photo:
+
+```
+GET http://host:port/PHOTO-UUID
+```
+
+Upload photo (return UUID in JSON):
+```
+POST http://host:port/
+binary file content goes here
+```

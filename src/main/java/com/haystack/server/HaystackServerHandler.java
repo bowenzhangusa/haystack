@@ -20,16 +20,13 @@ import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import com.haystack.server.web.PhotoWebHandler;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.HttpObject;
+import io.netty.handler.codec.http.*;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaderValues;
-import io.netty.handler.codec.http.HttpMethod;
+
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 public class HaystackServerHandler extends SimpleChannelInboundHandler<HttpObject> {
   private FullHttpRequest request;
@@ -51,11 +48,16 @@ public class HaystackServerHandler extends SimpleChannelInboundHandler<HttpObjec
     // TODO: here, we need to process this get or POST request
     final ByteArrayDataOutput respBuf = ByteStreams.newDataOutput();
 
-    if (request.method() == HttpMethod.GET) {
-      writeResponse(ctx, new PhotoWebHandler(respBuf, ctx, request).handleRetrieval());
-    }
-    else {
-      writeResponse(ctx, new PhotoWebHandler(respBuf, ctx, request).handleCreation());
+    try {
+      if (request.method() == HttpMethod.GET) {
+        writeResponse(ctx, new PhotoWebHandler(respBuf, ctx, request).handleRetrieval());
+      } else {
+        writeResponse(ctx, new PhotoWebHandler(respBuf, ctx, request).handleCreation());
+      }
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+      writeResponse(ctx, response);
     }
 
     ctx.writeAndFlush(Unpooled.EMPTY_BUFFER)

@@ -37,34 +37,37 @@ public class PhotoWebHandler {
   }
 
 
-  public FullHttpResponse handleCreation() {
-    try {
-      Photo photo = newPhotoFromRequest();
-      photo.setId(UUID.randomUUID().toString());
+  public FullHttpResponse handleCreation() throws IOException {
+    Photo photo = newPhotoFromRequest();
+    photo.setId(UUID.randomUUID());
 
-      //TODO: when saving a file, is the name field the same as the id?
-      Service service = Service.getService();
-      service.saveFile(photo.getId(), photo.getImage());
-      appendln(String.format("{\"%s\":\"%s\"}", "id", photo.getId()), this.respBuf);
-      return newResponse(HttpResponseStatus.CREATED, respBuf);
-    }
-    catch (Exception ex){
-      return newResponse(HttpResponseStatus.INTERNAL_SERVER_ERROR, respBuf);
-    }
+    Service service = Service.getService();
+    service.saveFile(photo.getId(), photo.getImage());
+    System.out.println("saving photo " + photo.getId());
+    appendln(String.format("{\"%s\":\"%s\"}", "id", photo.getId()), this.respBuf);
+    return newResponse(HttpResponseStatus.CREATED, respBuf);
   }
 
   public FullHttpResponse handleRetrieval() {
     String[] tokens = req.uri().toString().split("/");
-    if (tokens.length < 4) {
+    if (tokens.length < 2) {
+      System.out.println("No UUID in request");
       return newResponse(HttpResponseStatus.BAD_REQUEST, respBuf);
     }
 
-    UUID id = UUID.fromString(tokens[tokens.length - 1]);
+    UUID id = null;
+
+    try {
+      id = UUID.fromString(tokens[tokens.length - 1]);
+    } catch (IllegalArgumentException e) {
+      e.printStackTrace();
+      return newResponse(HttpResponseStatus.BAD_REQUEST, respBuf);
+    }
 
     Service service = Service.getService();
     byte[] image = service.getFile(id);
     try {
-      return newResponseForInstance(id.toString(), new Photo(id.toString(), image));
+      return newResponseForInstance(id.toString(), new Photo(id, image));
     }
     catch (JsonProcessingException ex) {
       return newResponse(HttpResponseStatus.INTERNAL_SERVER_ERROR, respBuf);
@@ -75,8 +78,13 @@ public class PhotoWebHandler {
     throws JsonParseException, JsonMappingException, IOException {
     final ByteBuf content = this.req.content();
     if (content.isReadable()) {
-      final byte[] json = ByteBufUtil.getBytes(content);
-      return Photo.newInstance(json);
+      try {
+        final byte[] json = ByteBufUtil.getBytes(content);
+        return Photo.newInstance(json);
+      } catch (JsonParseException ex) {
+        // if a request contained binary data instead of json
+        return new Photo(null, ByteBufUtil.getBytes(content));
+      }
     }
     return null;
   }
@@ -101,6 +109,7 @@ public class PhotoWebHandler {
   protected void appendByteArray(final byte[] byteArray) {
     this.respBuf.write(byteArray);
   }
+
   private FullHttpResponse newResponseForInstance(final String id,
                                                   final Photo instance) throws JsonProcessingException {
     if (instance != null) {

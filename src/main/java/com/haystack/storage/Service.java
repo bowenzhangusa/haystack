@@ -51,8 +51,8 @@ public class Service {
         return result;
     }
 
-    public UUID saveFile(String name, byte[] data) {
-        UUID id = this.db.saveFile(name, data);
+    public UUID saveFile(UUID id, byte[] data) {
+        this.db.saveFile(id, data);
         this.cache.saveFile(id, data);
 
         return id;

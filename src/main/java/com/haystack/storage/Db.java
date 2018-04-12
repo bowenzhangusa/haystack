@@ -29,13 +29,11 @@ public class Db {
         return this.session;
     }
 
-    public UUID saveFile(String name, byte[] data) {
+    public UUID saveFile(UUID id, byte[] data) {
         ByteBuffer buffer = ByteBuffer.wrap(data);
         PreparedStatement ps = session.prepare("insert into " + getTableKeyspace() + " (id, name, data) values(?,?,?)");
         BoundStatement boundStatement = new BoundStatement(ps);
-
-        UUID id = UUID.randomUUID();
-        session.execute(boundStatement.bind(id, name, buffer));
+        session.execute(boundStatement.bind(id, "", buffer));
 
         return id;
     }

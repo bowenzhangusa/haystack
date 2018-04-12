@@ -17,7 +17,10 @@ HOST_3 ?= 128.2.13.138
 APP_PORT ?= 7799
 
 # change this to "mvn" if you have maven installed globally
-MAVEN = ./maven/bin/mvn
+MAVEN ?= ./maven/bin/mvn
+
+# set this to 1 to enable java app printing logs to stdout
+DEBUG ?= 0
 
 # ports to use for redis
 # replace these ports if they are already taken;
@@ -54,20 +57,29 @@ export CASSANDRA_LISTEN_ADDRESS ?= $(CURRENT_HOST)
 # this is needed for cassandra to read the config from the host-specific directory
 export CASSANDRA_CONF ?= $(CASSANDRA_CONFIG_DIR)
 
-.PHONY: test install redis-start redis-cli-master redis-cli-slave configure-redis-cluster redis-reset cassandra-start
+.PHONY: test install redis-start redis-cli-master redis-cli-slave configure-redis-cluster redis-reset cassandra-start app-start
 
 # runs tests
 test:
 	$(MAVEN) -Dcheckstyle.skip=true test
 
-# starts redis, cassandra (+TODO: java app) on current host
+# starts redis, cassandra and java app on current host
 start: redis-start cassandra-start app-start
 
 # starts java application server
 app-start:
+	@# helps if app was already running
+	-@pkill -f haystack &> /dev/null
+ifeq (1, $(DEBUG))
+	@# start with logs enabled
 	@$(MAVEN) -q -nsu compile exec:exec -Dcheckstyle.skip=true \
-	-DmainClass="com.haystack.server.HaystackServer" -Dport="$(APP_PORT)" &>/dev/null &
-	@echo Haystack app server started at $(APP_PORT)
+	-DmainClass="com.haystack.server.HaystackServer" -Dport="$(APP_PORT)"
+else
+	@# start as daemon with logs disabled
+	@$(MAVEN) -q -nsu compile exec:exec -Dcheckstyle.skip=true \
+		-DmainClass="com.haystack.server.HaystackServer" -Dport="$(APP_PORT)" &>/dev/null &
+	@echo Haystack app started on port $(APP_PORT)
+endif
 
 # starts redis instances on current host (must be repeated on all hosts)
 redis-start:
@@ -149,7 +161,7 @@ cassandra-configure:
 cassandra-start: cassandra-configure
 	@echo starting cassandra...
 	@# this helps if cassandra was already running
-	-@pkill java &> /dev/null
+	-@pkill -f cassandra &> /dev/null
 	@# a hack to wait for cassandra to be killed
 	@sleep 1
 	@./cassandra/bin/cassandra -f &>/dev/null &
