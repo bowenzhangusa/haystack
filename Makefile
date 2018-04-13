@@ -22,6 +22,21 @@ MAVEN ?= ./maven/bin/mvn
 # set this to 1 to enable java app printing logs to stdout
 DEBUG ?= 0
 
+# nginx setup parameters
+NGINX_BASE_DIR = $(CURRENT_DIR)/nginx
+NGINX_DIR = $(NGINX_BASE_DIR)/nginx-1.13.1
+NGINX_BIN = ./nginx/nginx-1.13.1/objs/nginx
+NGINX_CONFIG = $(NGINX_BASE_DIR)/nginx.conf
+NGINX_CONFIG_TEMPLATE ?= $(CURRENT_DIR)/setup/nginx-template.conf
+
+# these variables will be used to fill nginx.conf file
+# (see task "nginx-start" and "setup/nginx-template.conf" file).
+# replace this port if its already in use.
+export NGINX_PORT ?= 7798
+export APP_HOST_1 = $(HOST_1):$(APP_PORT)
+export APP_HOST_2 = $(HOST_2):$(APP_PORT)
+export APP_HOST_3 = $(HOST_3):$(APP_PORT)
+
 # ports to use for redis
 # replace these ports if they are already taken;
 # then run "make redis-start" on each node, "make redis-cluster-configure" on one node,
@@ -57,7 +72,7 @@ export CASSANDRA_LISTEN_ADDRESS ?= $(CURRENT_HOST)
 # this is needed for cassandra to read the config from the host-specific directory
 export CASSANDRA_CONF ?= $(CASSANDRA_CONFIG_DIR)
 
-.PHONY: test install redis-start redis-cli-master redis-cli-slave configure-redis-cluster redis-reset cassandra-start app-start
+.PHONY: test install redis-start redis-cli-master redis-cli-slave configure-redis-cluster redis-reset cassandra-start app-start nginx-start
 
 # runs tests
 test:
@@ -65,6 +80,40 @@ test:
 
 # starts redis, cassandra and java app on current host
 start: redis-start cassandra-start app-start
+
+# downloads and compiles nginx sources. do this only once on one node.
+nginx-install:
+	mkdir -p nginx
+	wget -O $(NGINX_BASE_DIR)/nginx.tar.gz https://nginx.org/download/nginx-1.13.1.tar.gz
+	@tar zxvf nginx/nginx.tar.gz -C $(NGINX_BASE_DIR) &> /dev/null
+	wget -O $(NGINX_BASE_DIR)/pcre.tar.gz https://ftp.pcre.org/pub/pcre/pcre-8.40.tar.gz
+	@tar xzvf $(NGINX_BASE_DIR)/pcre.tar.gz -C $(NGINX_BASE_DIR) &> /dev/null
+	@wget -O $(NGINX_BASE_DIR)/zlib.tar.gz http://www.zlib.net/zlib-1.2.11.tar.gz
+	@tar xzvf $(NGINX_BASE_DIR)/zlib.tar.gz -C $(NGINX_BASE_DIR) &> /dev/null
+	wget  -O $(NGINX_BASE_DIR)/openssl.tar.gz https://www.openssl.org/source/openssl-1.1.0f.tar.gz
+	@tar xzvf $(NGINX_BASE_DIR)/openssl.tar.gz -C $(NGINX_BASE_DIR) &> /dev/null
+	@rm -rf $(NGINX_BASE_DIR)/*.tar.gz
+	@echo configuring nginx...
+	cd $(NGINX_DIR) && ./configure --prefix=$(NGINX_DIR) \
+                --sbin-path=$(NGINX_DIR) \
+                --modules-path=$(NGINX_BASE_DIR)/modules \
+                --conf-path=$(NGINX_CONFIG) \
+                --error-log-path=$(NGINX_BASE_DIR)/error.log \
+                --http-log-path=$(NGINX_BASE_DIR)/access.log \
+                --pid-path=$(NGINX_BASE_DIR)/nginx.pid \
+                --lock-path=$(NGINX_BASE_DIR)/nginx.lock
+	@echo compiling nginx...
+	$(MAKE) -C $(NGINX_DIR)
+	@echo nginx compiled
+
+# starts and configures nginx - execute once on 1 node after starting all other services
+# (e.g. make start && make nginx-start)
+nginx-start:
+	@# helps if nginx was already running
+	-@pkill nginx &> /dev/null
+	@envsubst < $(NGINX_CONFIG_TEMPLATE) > $(NGINX_CONFIG)
+	@$(NGINX_BIN) &> /dev/null &
+	@echo started nginx on port $(NGINX_PORT)
 
 # starts java application server
 app-start:

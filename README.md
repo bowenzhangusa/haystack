@@ -1,4 +1,20 @@
-## Infrastructure preparation
+## Starting the application
+After all infrastructure has been setup (see instructions below), to run the whole system we need to execute the following on each node:
+```
+make start
+```
+This will run cassandra, redis and java app on current host.
+
+The on one of the hosts, additionally run
+```
+make nginx-start
+```
+This will run nginx as a load-balancer on a current server.
+Further requests to the application should be issued here to be served by nginx.
+
+These commands need to be repeated daily because of regular reboots of andrew machines.
+
+## Infrastructure setup
 All of the below is already done on andrew machines at `/afs/andrew.cmu.edu/usr2/asergeye/haystack/project`.
 Only follow the instructions below if you're installing it someplace else.
 
@@ -61,7 +77,25 @@ make cassandra-start
 
 
 ### NGINX
-TODO
+We run NGINX only on 1 machine.
+To install it, run
+```
+make nginx-install
+```
+This will download and compile it.
+Then run
+```
+make nginx-start
+```
+This will configure and run nginx on a default port (in our case, 7798).
+
+In our configuration, nginx uses all 3 hosts for high-availability and load-balancing (see setup/nginx-template.conf and Makefile for details).
+
+Optionally, to monitor the nginx logs use
+```
+tailf nginx/error.log
+tailf nginx/access.log
+``` 
 
 ### Maven
 
@@ -74,32 +108,23 @@ mv apache-maven-3.5.3 maven
 
 If you already have newer maven installed globally, change the path to its binary in Makefile.
  
-## Project installation instructions
-Java 8, maven, redis and cassandra need to be installed beforehand.
+### Java application setup
 Specify redis and cassandra connection options "config.xml".
 
 Then run
 ```
-make start
+make app-start
 ```
-
-If redis, cassandra, maven were configured as described above, this single command should start every component.
-The application should become available at port 7799 by default.
-If application logs are needed, run
+This will start the application at port 7799 by default.
+If application logs are needed in console for debugging, run
 ```
-DEBUG=1 make start
+DEBUG=1 make app-start
 ```
 
 ## Tests:
 ```
 make test
 ```
-
-## Daily reboots on andrew machines
-
-To make sure all the software runs after server reboots, ssh to every machine (in our case, unix5.andrew.cmu.edu, unix4.andrew.cmu.edu, unix7.andrew.cmu.edu) and run the following:
-
-`make start`
 
 ## Project structure
 * `src` - java app source
