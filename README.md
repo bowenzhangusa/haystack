@@ -2,6 +2,9 @@
 This project is implemented with Java, Cassandra, Redis and NGINX.
 See architecture diagram (architecture.png) for overall project structure.
 
+The project is focused on providing fault-tolerant, robust service, by running multiple instances of every component.
+It does not specifically optimize for minimal storage overhead per file, but relies on Cassandra to store files efficiently. 
+
 ## Infrastructure setup
 All of the below is already done on andrew machines at `/afs/andrew.cmu.edu/usr2/asergeye/haystack/project`.
 Only follow the instructions below if you're installing it someplace else.
