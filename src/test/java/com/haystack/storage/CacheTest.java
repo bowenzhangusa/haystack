@@ -1,6 +1,7 @@
 package com.haystack.storage;
 
 import com.haystack.Config;
+import com.haystack.server.model.Photo;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
@@ -17,13 +18,23 @@ public class CacheTest {
     @Test
     public void canGetAndSet() {
         Cache c = Service.getService().getCache();
+        Photo photo = new Photo();
         UUID nonExistingId = UUID.randomUUID();
-        assertNull(c.getFile(nonExistingId));
+        photo.setId(nonExistingId);
+
+
+        assertNull("Null must be returned for non-existing file", c.getFile(nonExistingId));
 
         try {
-            byte[] file = IOUtils.toByteArray(this.getClass().getResourceAsStream("cat.jpg"));
-            c.saveFile(nonExistingId, file);
-            assertNotNull(c.getFile(nonExistingId));
+            byte[] fileBytes = IOUtils.toByteArray(this.getClass().getResourceAsStream("cat.jpg"));
+            photo.setContent(fileBytes);
+            photo.setContentType("image/jpeg");
+            c.saveFile(photo);
+
+            Photo saved = c.getFile(photo.getId());
+            assertNotNull("A photo must be returned after its been saved", saved);
+            assertArrayEquals("Saved file must match the original", photo.getContent(), saved.getContent());
+            assertEquals("Saved content-type must match the original", "image/jpeg", saved.getContentType());
         } catch (IOException e) {
             fail("Unexpected exception");
         }

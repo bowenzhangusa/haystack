@@ -1,18 +1,6 @@
-## Starting the application
-After all infrastructure has been setup (see instructions below), to run the whole system we need to execute the following on each node:
-```
-make start
-```
-This will run cassandra, redis and java app on current host.
-
-The on one of the hosts, additionally run
-```
-make nginx-start
-```
-This will run nginx as a load-balancer on a current server.
-Further requests to the application should be issued here to be served by nginx.
-
-These commands need to be repeated daily because of regular reboots of andrew machines.
+## About
+This project is implemented with Java, Cassandra, Redis and NGINX.
+See architecture diagram (architecture.png) for overall project structure.
 
 ## Infrastructure setup
 All of the below is already done on andrew machines at `/afs/andrew.cmu.edu/usr2/asergeye/haystack/project`.
@@ -21,7 +9,7 @@ Only follow the instructions below if you're installing it someplace else.
 The infrastructure setup is only semi-automated and does not handle errors and edge cases well.
 
 The application uses ports in range of 7790-7799. If they are busy or need to be changed, refer to the comments in Makefile.
-We used 3 andrew machines for deployment: unix4, unix5, and unix7.
+We used 3 andrew machines for deployment: unix5, unix7, and unix8.
 If you use different machines, edit the Makefile with corresponding hostnames.
 
 ### Redis
@@ -63,17 +51,21 @@ If you need to reconfigure the cluster later, make sure to first execute `make r
 After setting the cluster up, modify `./config.xml` to point to all of the redis servers.
 
 ### Cassandra
-Download and unpack cassandra into the project directory (on one node, if working with andrew machines):
+Download and unpack cassandra into the project directory (on one node, if working with andrew machines) using Makefile command:
 ```
-wget http://apache.claz.org/cassandra/3.11.2/apache-cassandra-3.11.2-bin.tar.gz
-tar zxvf apache-cassandra-3.11.2-bin.tar.gz
-mv apache-cassandra-3.11.2 cassandra
+make cassandra-install
 ```
 
-Run this on each node simultaneously (so that nodes could start communicating with each other ASAP, otherwise cassandra will complain and die):
+Then run this on each node simultaneously (within ~1 minute, so that nodes could start communicating with each other ASAP - otherwise cassandra will complain and die):
 ```
 make cassandra-start
 ```
+
+After cassandra has been started on each node, run the following on one node to create keyspace and table:
+```
+make cassandra-initialize
+```
+For some reason this command does not return to the shell, so upon seeing the "Cassandra keyspace and table initialized" message, press Ctrl+C.
 
 
 ### NGINX
@@ -121,6 +113,22 @@ If application logs are needed in console for debugging, run
 DEBUG=1 make app-start
 ```
 
+## Starting the application
+After infrastructure components has been setup, to run the whole system we need to execute the following on each node:
+```
+make start
+```
+This will run cassandra, redis and java app on current host.
+
+The on one of the hosts, additionally run
+```
+make nginx-start
+```
+This will run nginx as a load-balancer on a current server.
+Further requests to the application should be issued here to be served by nginx.
+
+These commands need to be repeated daily because of regular reboots of andrew machines.
+
 ## Tests:
 ```
 make test
@@ -133,14 +141,14 @@ make test
 
 ## API usage
 
-Get photo:
+Requests should be issued to a host where nginx is running, on a default port 7798.
+To upload a photo, send `POST` request in `multipart/form-data` format with a `file` field to the same host and port:
 
 ```
-GET http://host:port/PHOTO-UUID
+curl -v --request POST \
+  --url http://unix5.andrew.cmu.edu:7798 \
+  --header 'content-type: multipart/form-data' \
+  --form 'file=@PATH-TO-FILE'
 ```
-
-Upload photo (return UUID in JSON):
-```
-POST http://host:port/
-binary file content goes here
-```
+This will respond with JSON containing photo id.
+Saved photo can be viewed in browser by url: `http://unix5.andrew.cmu.edu:7798/PHOTO-ID`

@@ -19,6 +19,7 @@ package com.haystack.server;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import com.haystack.server.web.PhotoWebHandler;
+import com.haystack.storage.Service;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
 
@@ -45,7 +46,6 @@ public class HaystackServerHandler extends SimpleChannelInboundHandler<HttpObjec
   private void processRequest(ChannelHandlerContext ctx, HttpObject msg) {
     request = (FullHttpRequest) msg;
 
-    // TODO: here, we need to process this get or POST request
     final ByteArrayDataOutput respBuf = ByteStreams.newDataOutput();
 
     try {

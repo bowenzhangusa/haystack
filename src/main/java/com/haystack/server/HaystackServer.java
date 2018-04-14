@@ -29,6 +29,9 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
+/**
+ * Primary java server class for processing client file requests
+ */
 public class HaystackServer implements Runnable {
 
   private EventLoopGroup bossGroup;
@@ -48,10 +51,6 @@ public class HaystackServer implements Runnable {
     if (args.length > 0) {
       port = Integer.parseInt(args[0]);
     }
-
-    Service s = Service.getService();
-    s.getDb().ensureKeyspaceExists();
-    s.getDb().ensureTableExists();
 
     final HaystackServer server = new HaystackServer(port);
     try {

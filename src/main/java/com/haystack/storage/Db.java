@@ -1,6 +1,7 @@
 package com.haystack.storage;
 
 import com.datastax.driver.core.*;
+import com.haystack.server.model.Photo;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
@@ -29,17 +30,17 @@ public class Db {
         return this.session;
     }
 
-    public UUID saveFile(UUID id, byte[] data) {
-        ByteBuffer buffer = ByteBuffer.wrap(data);
-        PreparedStatement ps = session.prepare("insert into " + getTableKeyspace() + " (id, name, data) values(?,?,?)");
+    public void saveFile(Photo photo) {
+        ByteBuffer buffer = ByteBuffer.wrap(photo.getContent());
+        PreparedStatement ps = session.prepare(
+                "insert into " + getTableKeyspace() + " (id, contentType, data) values(?,?,?)");
         BoundStatement boundStatement = new BoundStatement(ps);
-        session.execute(boundStatement.bind(id, "", buffer));
-
-        return id;
+        session.execute(boundStatement.bind(photo.getId(), photo.getContentType(), buffer));
     }
 
-    public byte[] getFile(UUID id) {
-        PreparedStatement ps = session.prepare("SELECT data FROM " + getTableKeyspace() + " WHERE id=?");
+    public Photo getFile(UUID id) {
+        PreparedStatement ps = session.prepare(
+                "SELECT contentType, data FROM " + getTableKeyspace() + " WHERE id=?");
         BoundStatement boundStatement = new BoundStatement(ps);
         ResultSet result = session.execute(boundStatement.bind(id));
         Row r = result.one();
@@ -48,7 +49,13 @@ public class Db {
             return null;
         }
 
-        return com.datastax.driver.core.utils.Bytes.getArray(r.getBytes("data"));
+        Photo photo = new Photo();
+        photo.setId(id);
+        photo.setContent(com.datastax.driver.core.utils.Bytes.getArray(r.getBytes("data")));
+        System.out.println("file len " + photo.getContent().length);
+        photo.setContentType(r.getString("contentType"));
+
+        return photo;
     }
 
     public void deleteFile(UUID id) {
@@ -57,28 +64,30 @@ public class Db {
         session.execute(boundStatement.bind(id));
     }
 
-    public void close() {
-        session.close();
-        cluster.close();
-    }
-
+    /**
+     * Creates keyspace in cassandra if it wasnt created yet
+     * with replication factor of 3 (or less, if there are less nodes available)
+     */
     public void ensureKeyspaceExists() {
         StringBuilder sb =
                 new StringBuilder("CREATE KEYSPACE IF NOT EXISTS ")
                         .append(FILES_KEYSPACE).append(" WITH replication = {")
                         .append("'class':'").append("SimpleStrategy")
-                        .append("','replication_factor':").append(this.nodeCount)
+                        .append("','replication_factor':").append(Math.min(3, this.nodeCount))
                         .append("};");
 
         String query = sb.toString();
         session.execute(query);
     }
 
+    /**
+     * Creates table in cassandra if it wasnt created yet
+     */
     public void ensureTableExists() {
         StringBuilder sb = new StringBuilder("CREATE TABLE IF NOT EXISTS ")
                 .append(getTableKeyspace()).append("(")
                 .append("id uuid PRIMARY KEY, ")
-                .append("name text,")
+                .append("contentType text,")
                 .append("data blob);");
 
         String query = sb.toString();

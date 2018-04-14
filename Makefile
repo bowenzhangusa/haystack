@@ -8,8 +8,8 @@ export HAYSTACK_HOME = $(CURRENT_DIR)
 # Hosts we use for project deployment.
 # this is unix5.andrew.cmu.edu
 HOST_1 ?= 128.2.13.144
-# unix4.andrew.cmu.edu
-HOST_2 ?= 128.2.13.137
+# unix8.andrew.cmu.edu
+HOST_2 ?= 128.2.13.188
 # unix7.andrew.cmu.edu
 HOST_3 ?= 128.2.13.138
 
@@ -76,7 +76,7 @@ export CASSANDRA_CONF ?= $(CASSANDRA_CONFIG_DIR)
 
 # runs tests
 test:
-	$(MAVEN) -Dcheckstyle.skip=true test
+	$(MAVEN) -q -Dcheckstyle.skip=true test
 
 # starts redis, cassandra and java app on current host
 start: redis-start cassandra-start app-start
@@ -117,8 +117,6 @@ nginx-start:
 
 # starts java application server
 app-start:
-	@# helps if app was already running
-	-@pkill -f haystack &> /dev/null
 ifeq (1, $(DEBUG))
 	@# start with logs enabled
 	@$(MAVEN) -q -nsu compile exec:exec -Dcheckstyle.skip=true \
@@ -192,6 +190,13 @@ redis-cluster-configure: redis-reset
 	@# host 1 becames replicated on host 3
 	./redis/src/redis-trib.rb add-node --slave $(HOST_3):$(REDIS_SLAVE_PORT) $(HOST_1):$(REDIS_MASTER_PORT)
 
+# downloads cassandra sources to project directory
+cassandra-install:
+	wget http://apache.claz.org/cassandra/3.11.2/apache-cassandra-3.11.2-bin.tar.gz
+	@tar zxvf apache-cassandra-3.11.2-bin.tar.gz
+	mv apache-cassandra-3.11.2 cassandra
+	@echo Cassandra installed
+
 # configures cassandra instance on current host, initializing config files
 cassandra-configure:
 	@echo creating host-specific config and data directories
@@ -204,7 +209,12 @@ cassandra-configure:
 	@cp $(CURRENT_DIR)/setup/cassandra-env.sh $(CASSANDRA_CONFIG_DIR)/cassandra-env.sh
 	@echo filling config file
 	@envsubst < $(CASSANDRA_CONFIG_TEMPLATE) > $(CASSANDRA_CONFIG)
-	@echo done
+	@echo cassandra configured for host $(CURRENT_HOST)
+
+# creates cassandra keyspace and table - to be executed only once on 1 node
+cassandra-initialize:
+	@$(MAVEN) -q exec:exec -Dcheckstyle.skip=true \
+    		-DmainClass="com.haystack.server.Setup"
 
 # starts cassandra instance on current host
 cassandra-start: cassandra-configure
@@ -213,6 +223,6 @@ cassandra-start: cassandra-configure
 	-@pkill -f cassandra &> /dev/null
 	@# a hack to wait for cassandra to be killed
 	@sleep 1
-	@./cassandra/bin/cassandra -f &>/dev/null &
+	./cassandra/bin/cassandra -f &>/dev/null &
 	@echo cassandra started
 

@@ -1,6 +1,7 @@
 package com.haystack.storage;
 
 import com.datastax.driver.core.ResultSet;
+import com.haystack.server.model.Photo;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,22 +54,28 @@ public class DbTest {
 
         assertEquals(columnNames.size(), 3);
         assertTrue(columnNames.contains("id"));
-        assertTrue(columnNames.contains("name"));
+        // cassandra keeps columns in lowercase
+        assertTrue(columnNames.contains("contenttype"));
         assertTrue(columnNames.contains("data"));
     }
 
     @Test
     public void checkFileSave() {
-        try {
-            byte[] file = IOUtils.toByteArray(this.getClass().getResourceAsStream("cat.jpg"));
-            UUID id = this.db.saveFile("cat.jpg", file);
-            assertNotNull("ID should be assigned to file", id);
-            byte[] savedFile = this.db.getFile(id);
-            assertNotNull(savedFile);
-            assertArrayEquals("Saved file must match the original", file, savedFile);
-            this.db.deleteFile(id);
+        Photo photo = new Photo();
+        photo.setId(UUID.randomUUID());
 
-            byte[] deleted = this.db.getFile(id);
+        try {
+            byte[] fileBytes = IOUtils.toByteArray(this.getClass().getResourceAsStream("cat.jpg"));
+            photo.setContent(fileBytes);
+            photo.setContentType("image/jpeg");
+            this.db.saveFile(photo);
+            Photo savedFile = this.db.getFile(photo.getId());
+            assertNotNull(savedFile);
+            assertArrayEquals("Saved file must match the original", fileBytes, savedFile.getContent());
+            assertEquals("Saved content-type must match the original", "image/jpeg", savedFile.getContentType());
+            this.db.deleteFile(photo.getId());
+
+            Photo deleted = this.db.getFile(photo.getId());
             assertNull(deleted);
         } catch (IOException e) {
             fail("Unexpected exception");

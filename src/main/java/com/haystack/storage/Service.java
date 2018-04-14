@@ -2,8 +2,7 @@ package com.haystack.storage;
 
 import com.haystack.Config;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.XMLConfiguration;
+import com.haystack.server.model.Photo;
 
 import java.util.UUID;
 
@@ -41,20 +40,18 @@ public class Service {
         this.db = db;
     }
 
-    public byte[] getFile(UUID id) {
-        byte[] result = this.cache.getFile(id);
+    public Photo getFile(UUID id) {
+        Photo photo = this.cache.getFile(id);
 
-        if (result == null) {
-            result = this.db.getFile(id);
+        if (photo == null) {
+            photo = this.db.getFile(id);
         }
 
-        return result;
+        return photo;
     }
 
-    public UUID saveFile(UUID id, byte[] data) {
-        this.db.saveFile(id, data);
-        this.cache.saveFile(id, data);
-
-        return id;
+    public void saveFile(Photo photo) {
+        this.db.saveFile(photo);
+        this.cache.saveFile(photo);
     }
 }
